@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define DEFAULT_LINES 10
 
@@ -75,34 +76,42 @@ int read_file(FILE* file, const unsigned int lines_to_read) {
 
 /*
     Usage:
-    tael <file_name> - Displays last 10 lines
-    tael <file_name> -<line_count> - Displays given lines.
+    tael -r <file_name> - Displays last 10 lines
+    tael -r10 <file_name> - Displays given lines.
+    tael -f <file_name> - Displays last 10 lines and keep printing new if observed. Userful for printing logs.
 */
 
 int main(const int argc, char** argv) {
-    if (argc < 2) {
-        char* inst = "Usage: tael <file_name> or run tael --help for more information.";
+    // Handle tael -help case here.
+
+    if (argc < 3) {
+        char* inst = "Usage: tael <option> <file_name> or run tael -help for more information.";
         print_error_with_instructions("Invalid Command", inst);
         return 0;
     }
 
-    const char* file_name = argv[1];
+    const char* option = argv[1];
+    const char* file_name = argv[2];
     int lines_to_read = DEFAULT_LINES;
 
-    // Handles tael <file_name> -<line_count> by calculating lines if specified
-    if (argc == 3) {
-        const char* c_lines = argv[2];
-        if (c_lines != 0) {
-            const int i_lines = abs(atoi(c_lines));
-            if (i_lines == 0) {
-                char* inst = "Usage: tael <file_name> -<lines>";
-                print_error_with_instructions("Invalid Command", inst);
+    if (strcmp(option, "-f") == 0) {
+        // Handle Follow Print Logic
+    } else if (strncmp(option, "-r", 2) == 0) {
+        if (strlen(option) > 2) {
+            const char* num_str = option + 2;
+            char* end_ptr;
+            const long num = strtol(num_str, &end_ptr, 10);
+
+            if (end_ptr == num_str || num <= 0) {
+                char* ins = "Correct usage: tael -r<lines> file_name or just -r to read 10 lines.";
+                print_error_with_instructions("Invalid usage of -r flag.", ins);
                 return 0;
             }
 
-            lines_to_read = i_lines;
+            lines_to_read = (int) num;
         }
     }
+
 
 
     FILE* file = fopen(file_name, "rb");
@@ -111,7 +120,6 @@ int main(const int argc, char** argv) {
         return 1;
     }
 
-    printf("Lines to read: %d", lines_to_read);
     if(read_file(file, lines_to_read) != 0) {
         print_error("Unable to read file.");
         return 1;
