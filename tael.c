@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define DEFAULT_LINES 10
 #define POOL_INTERVAL 100
@@ -81,6 +82,8 @@ void read_follow(FILE* file, long last_read_pos) {
 
             last_read_pos = new_size;
         }
+
+        usleep(100000);
     }
 }
 
