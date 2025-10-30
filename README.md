@@ -1,5 +1,5 @@
-#### Tael - A better `tail` alternative.
-A better alternative to `tail` command with Smart Highlighting, Auto File Rotation & Customizable and more.
+#### Tael - A `tail` alternative.
+An alternative to `tail` command with Smart Highlighting, Auto File Rotation & Customizable and more.
 
 ##### Supported Commands:
 * `tael -r <file_name>` - Displays last 10 lines
