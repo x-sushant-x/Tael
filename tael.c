@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #define DEFAULT_LINES 10
 #define POOL_INTERVAL 100
@@ -65,12 +66,26 @@ long read_file(FILE* file, const unsigned int lines_to_read) {
     return file_size - 1;
 }
 
-void read_follow(FILE* file, long last_read_pos) {
+void read_follow(const char* file_name, FILE* file, long last_read_pos) {
     for (;;) {
+        usleep(POLL_OUT * 1000);
+
+        struct stat stats;
+        if (stat(file_name, &stats) == -1) {
+            continue;
+        }
+
         if(fseek(file, 0, SEEK_END) != 0) return;
 
         const long new_size = ftell(file);
         if (new_size == -1L) return;
+
+        if (new_size < last_read_pos) {
+            fclose(file);
+            file = fopen(file_name, "rb");
+            if (!file) return;
+            last_read_pos = 0;
+        }
 
         if (last_read_pos < new_size) {
             if (fseek(file, last_read_pos, SEEK_SET) != 0) return;
@@ -82,8 +97,6 @@ void read_follow(FILE* file, long last_read_pos) {
 
             last_read_pos = new_size;
         }
-
-        usleep(100000);
     }
 }
 
@@ -114,14 +127,14 @@ int main(const int argc, char** argv) {
 
 
     if (strcmp(option, "-f") == 0) {
-        const int last_read_pos = read_file(file, DEFAULT_LINES);
+        const long last_read_pos = read_file(file, DEFAULT_LINES);
 
         if (last_read_pos == -1) {
             print_error("Unable to read file.");
             return 1;
         }
 
-        read_follow(file, last_read_pos);
+        read_follow(file_name, file, last_read_pos);
 
     } else if (strncmp(option, "-r", 2) == 0) {
         int lines_to_read = DEFAULT_LINES;
