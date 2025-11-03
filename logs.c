@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <signal.h>
 
 const char *logs[] = {
     "2025-11-03 10:00:01 [INFO] Server started successfully.",
@@ -36,6 +37,13 @@ const char *logs[] = {
     "2025-11-03 10:00:30 [INFO] Application terminated cleanly."
 };
 
+volatile sig_atomic_t stop = 0;
+
+void handle_signal(int sig) {
+    (void)sig;
+    stop = 1;
+}
+
 // Usage - logs <file_name>.log
 int main(int argc, char** argv) {
     srand(time(NULL));
@@ -49,18 +57,27 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    signal(SIGINT, handle_signal);
+
     const int min = 0;
     const int max = sizeof(logs) / sizeof(logs[0]) - 1;
 
     for (;;) {
+        if (stop) {
+            printf("\nReceived Ctrl+C — cleaning up...\n");
+            fflush(log_file);
+            fclose(log_file);
+            printf("Log file closed. Exiting cleanly.\n");
+            break;
+        }
+
         const int num = min + rand() % (max - min + 1);
         const char* data = logs[num];
         fprintf(log_file, "%s\n", data);
         fflush(log_file);
-        usleep(100 * 1000);
+        usleep(1 * 1000);
     }
 
-    fclose(log_file);
 
     return 0;
 }
