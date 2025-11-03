@@ -68,7 +68,7 @@ long read_file(FILE* file, const unsigned int lines_to_read) {
 
 void read_follow(const char* file_name, FILE* file, long last_read_pos) {
     for (;;) {
-        usleep(POLL_OUT * 1000);
+        usleep(POOL_INTERVAL * 1000);
 
         struct stat stats;
         if (stat(file_name, &stats) == -1) {
